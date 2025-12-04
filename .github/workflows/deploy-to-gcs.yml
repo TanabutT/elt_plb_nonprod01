@@ -1,0 +1,34 @@
+name: Deploy artifacts to GCS
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  package-and-upload:
+    runs-on: ubuntu-latest
+    env:
+      # These should be set in the repository secrets
+      GCP_PROJECT: ${{ secrets.GCP_PROJECT }}
+      GCP_SA_KEY: ${{ secrets.GCP_SA_KEY }}
+      GCS_TARGET_BUCKET: ${{ secrets.GCS_TARGET_BUCKET }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ secrets.GCP_PROJECT }}
+
+      - name: Create archive of src/ and scripts/
+        run: |
+          mkdir -p dist
+          tar -czf dist/plb_python_artifacts.tar.gz src/ scripts/ requirements.txt
+
+      - name: Upload artifact to GCS
+        run: |
+          # Example path: gs://<bucket>/artifacts/bronze/${{ github.sha }}.tar.gz
+          gsutil cp dist/plb_python_artifacts.tar.gz gs://${GCS_TARGET_BUCKET}/artifacts/${{ github.sha }}.tar.gz
