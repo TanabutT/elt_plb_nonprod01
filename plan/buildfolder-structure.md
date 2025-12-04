@@ -1,6 +1,10 @@
-plan for build folder structure only
+plan for build folder structure only 
+design it with best practice and suitable for detail of the task below as well
 project for ELT with python airflow (gcp datacomposer in future) 
-    high level architecture is 3 zone :bronze to silver to gold
+    - CI/CD : github action with python script will store in google cloud storage (gcs) separate bronze, silver, gold (anoter bucket)
+    - schedule bacth run : daily
+    - each run after first run will be incremental / CDC (change data capture) to reduce cost and make it faster
+    - high level architecture is 3 zone :bronze to silver to gold
     bronze zone
         1.extract mssql 9 services database which have various number of table inside : this is data source
         2.extact data source by
@@ -79,3 +83,15 @@ project for ELT with python airflow (gcp datacomposer in future)
                     * A chart showing Row Counts over time (for trend analysis).
                     * A table displaying key validation metrics (e.g., 'Total Sales Difference: $0.00', 'Missing Rows: 0').
                 * Pro: Easy for a normal user to see and understand at a glance, requires no technical knowledge, and is highly consumable.
+
+        7. Alert/ notification on 
+            7.1 validation report
+            7.2 pipeline status
+            7.3 error report
+
+        8. rerun pipeline
+            8.1 run specific task
+            8.2 run from failed task
+            8.3 run from specific date
+            8.4 run from specific database service (whole table inside)
+            8.5 run from specific table (with dependency or related table)
