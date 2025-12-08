@@ -35,6 +35,7 @@ def get_secret(secret_name):
     secret_path = f"projects/{PROJECT_ID}/secrets/{secret_name}/versions/latest"
     response = client.access_secret_version(request={"name": secret_path})
     return response.payload.data.decode("UTF-8")
+
 SECRET_NAME = os.getenv("SECRET_NAME")
 DB_PASSWORD = get_secret(SECRET_NAME)
 MAX_WORKERS = int(os.getenv("MAX_WORKERS"))
@@ -99,3 +100,4 @@ def get_pyodbc_connection(database_name=None):
 
 if __name__ == "__main__":
     get_pyodbc_connection(database_name=None)
+    logger.info("Connection successful!")
