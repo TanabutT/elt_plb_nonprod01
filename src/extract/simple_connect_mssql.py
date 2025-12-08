@@ -7,22 +7,37 @@ import io
 import json
 from datetime import timezone, timedelta, datetime
 from concurrent.futures import ThreadPoolExecutor, as_completed
-
+from dotenv import load_dotenv, find_dotenv
+from google.cloud import secretmanager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Find the correct .env file based on the current environment
+env_file = find_dotenv(f'.env')
+# print('env_file: ', env_file)
 
-# Configuration from environment variables
-PROJECT_ID = os.getenv("PROJECT_ID", "terra-mhesi-dp-poc")
-GCS_BUCKET = os.getenv("GCS_BUCKET", "terra-mhesi-dp-poc-gcs-bronze-01")
-GCS_PREFIX = os.getenv("GCS_PREFIX", "sql-exports-parquet/")
-SQL_SERVER_IP = os.getenv("SQL_SERVER_IP", "10.2.1.9")
-DB_NAME = os.getenv("DB_NAME", "Master")
-DB_USER = os.getenv("DB_USER", "sqlserver")
-DB_PASSWORD = os.getenv("DB_PASSWORD", ".Sm6L1Alf{jtvESA") # get it from secret manager
-MAX_WORKERS = int(os.getenv("MAX_WORKERS", "5"))  # Parallel table processing
+# Load the environment variables from the .env file
+load_dotenv(env_file)
+
+
+PROJECT_ID = os.getenv("PROJECT_ID")
+GCS_BUCKET = os.getenv("GCS_BUCKET")
+GCS_PREFIX = os.getenv("GCS_PREFIX")
+SQL_SERVER_IP = os.getenv("SQL_SERVER_IP")
+DB_NAME = os.getenv("DB_NAME")
+DB_USER = os.getenv("DB_USER")
+
+# Access Secret Manager to retrieve the database password
+def get_secret(secret_name):
+    client = secretmanager.SecretManagerServiceClient()
+    secret_path = f"projects/{PROJECT_ID}/secrets/{secret_name}/versions/latest"
+    response = client.access_secret_version(request={"name": secret_path})
+    return response.payload.data.decode("UTF-8")
+SECRET_NAME = os.getenv("SECRET_NAME")
+DB_PASSWORD = get_secret(SECRET_NAME)
+MAX_WORKERS = int(os.getenv("MAX_WORKERS"))
 
 # Query to get all user tables
 GET_TABLES_QUERY = """
